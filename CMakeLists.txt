@@ -10,6 +10,7 @@ add_library(graph_lib
     include/graph.h
     include/directed_graph.h
     include/dfs_graph_processing.h
+    include/dfs_cycle.h
 )
 
 # Make the include directory available
@@ -33,6 +34,6 @@ if(BUILD_TESTS)
     )
     FetchContent_MakeAvailable(Catch2)
 
-    add_executable(graph_tests tests/test_graph.cpp tests/test_directed_graph.cpp)
+    add_executable(graph_tests tests/test_graph.cpp tests/test_directed_graph.cpp tests/test_cycle.cpp)
     target_link_libraries(graph_tests PRIVATE graph_lib Catch2::Catch2WithMain)
 endif()

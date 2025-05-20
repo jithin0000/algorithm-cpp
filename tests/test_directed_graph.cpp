@@ -23,5 +23,4 @@ TEST_CASE("DFS", "[directed_graph]")
     G.addEdge(0,1);
     G.addEdge(0,2);
     DiagraphDFS dag(G,0);
-
 }

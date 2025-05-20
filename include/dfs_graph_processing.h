@@ -2,9 +2,8 @@
 #define DFS_GRAPH_PROCESSING_H
 
 #include "directed_graph.h"
-#include <iostream>
 #include <memory.h>
-using namespace std;
+
 
 class DiagraphDFS {
 private:
@@ -18,7 +17,6 @@ public:
     dfs(G, source);
   }
   void dfs(DirectedGraph &G, int v) {
-    cout << v << endl;
     marked[v] = true;
     for (const int w : G.adj(v)) {
       if (!marked[w]) {
