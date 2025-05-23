@@ -10,7 +10,8 @@ add_library(graph_lib
     include/graph.h
     include/directed_graph.h
     include/dfs_graph_processing.h
-    include/dfs_cycle.h
+    include/directed_cycle.h
+    include/topological_sort.h
 )
 
 # Make the include directory available
@@ -21,6 +22,7 @@ target_include_directories(graph_lib PUBLIC
 # Main executable
 add_executable(graph_main src/main.cpp)
 target_link_libraries(graph_main PRIVATE graph_lib)
+
 
 # Testing configuration
 option(BUILD_TESTS "Build tests" ON)
@@ -34,6 +36,6 @@ if(BUILD_TESTS)
     )
     FetchContent_MakeAvailable(Catch2)
 
-    add_executable(graph_tests tests/test_graph.cpp tests/test_directed_graph.cpp tests/test_cycle.cpp)
+    add_executable(graph_tests tests/test_graph.cpp tests/test_directed_graph.cpp tests/test_cycle.cpp tests/tests_topological_sort.cpp)
     target_link_libraries(graph_tests PRIVATE graph_lib Catch2::Catch2WithMain)
 endif()

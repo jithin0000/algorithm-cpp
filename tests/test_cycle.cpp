@@ -1,7 +1,8 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_test_macros.hpp>
-#include "dfs_cycle.h"
+#include "directed_cycle.h"
 #include "directed_graph.h"
+#include <iostream>
 
 
 TEST_CASE("Directed Cycle detect Correctly", "[DirectedCycle]"){
@@ -33,6 +34,7 @@ TEST_CASE("Directed Cycle detect Correctly", "[DirectedCycle]"){
         REQUIRE(dc.hasCycle());
         
         auto cycle = dc.getCycle();
+
         REQUIRE(cycle.size() == 4); // 0->1->2->0
         REQUIRE(cycle.top() == 0); cycle.pop();
         REQUIRE(cycle.top() == 2); cycle.pop();
