@@ -24,6 +24,10 @@ target_include_directories(graph_lib PUBLIC
 add_executable(graph_main src/main.cpp)
 target_link_libraries(graph_main PRIVATE graph_lib)
 
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address)
+endif()
 
 # Testing configuration
 option(BUILD_TESTS "Build tests" ON)

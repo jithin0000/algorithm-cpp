@@ -31,10 +31,11 @@ public:
       if (!marked[w])
         dfs(G, w);
     }
-    reversePostOrder.push(v);
+    reversePostOrder.emplace(v);
   }
 
-  std::stack<int> order() const { return reversePostOrder; }
+  // FIXME :: make it const
+  std::stack<int> &order() { return reversePostOrder; }
 };
 
 #endif

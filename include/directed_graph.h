@@ -3,27 +3,47 @@
 #include <iostream>
 #include <vector>
 
-class DirectedGraph{
+class DirectedGraph {
 private:
-    int _V=0;
-    int _E=0;
-    std::vector<std::vector<int>> _adj;
+  int _V = 0;
+  int _E = 0;
+  std::vector<std::vector<int>> _adj;
+
 public:
-    DirectedGraph(int v):_V(v), _adj(v){}
-    void addEdge(int v, int w){
+  DirectedGraph() {};
+  DirectedGraph(int v) : _V(v), _adj(v) {}
+  void addEdge(int v, int w) {
     _adj[v].push_back(w);
-        _E++;
+    _E++;
+  }
+
+  int V() const { return _V; }
+  int E() const { return _E; }
+
+   DirectedGraph reverse() const {
+    DirectedGraph G(V());
+    for (int v = 0; v < V(); v++) {
+      for (const int w : adj(v)) {
+        G.addEdge(w, v);
+      }
     }
+    return G;
+  }
 
-    int V() const {return _V;}
-    int E() const {return _E;}
-
-    const std::vector<int>& adj(int v)const {
-        return _adj[v];
+  const std::vector<int> &adj(int v) const { return _adj[v]; }
+  friend std::ostream &operator<<(std::ostream &os, const DirectedGraph &G) {
+    os << "{ \n";
+    for (int i = 0; i < G.V(); i++) {
+      os << "\t" << i << ":";
+      for (int w : G.adj(i)) {
+        os << " -> " << w;
+      }
+      os << "\n";
     }
+    os << "}";
 
+    return os;
+  }
 };
 
-
 #endif
-

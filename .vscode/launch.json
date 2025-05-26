@@ -1,0 +1,31 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug graph_main",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/graph_main",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "lldb",
+      "preLaunchTask": "CMake: build"
+    },
+    {
+      "name": "Debug test_graph",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/graph_tests",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "lldb",
+      "preLaunchTask": "CMake: build"
+    }
+  ]
+}

@@ -24,7 +24,7 @@ public:
   }
 
   bool hasCycle() const { return !cycle.empty(); }
-    const std::stack<int> getCycle() const {return cycle;}
+  const std::stack<int> getCycle() const { return cycle; }
 
   void dfs(const DirectedGraph &G, int v) {
     visited[v] = true;
@@ -32,7 +32,8 @@ public:
 
     for (const int w : G.adj(v)) {
       // check has cycle then return
-      if (hasCycle())return;
+      if (hasCycle())
+        return;
       else if (!visited[w])
         dfs(G, w);
       else if (onStack[w]) {
