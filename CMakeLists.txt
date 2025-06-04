@@ -13,6 +13,7 @@ add_library(graph_lib
     include/directed_cycle.h
     include/topological_sort.h
     include/symbol_graph.h
+    include/PGraph.h
 )
 
 # Make the include directory available
@@ -47,6 +48,7 @@ if(BUILD_TESTS)
     tests/test_cycle.cpp 
     tests/tests_topological_sort.cpp
     tests/tests_symbol_graph.cpp
+    tests/tests_p_graph.cpp
     )
     target_link_libraries(graph_tests PRIVATE graph_lib Catch2::Catch2WithMain)
 endif()
