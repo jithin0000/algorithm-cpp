@@ -1,7 +1,10 @@
 #include "PGraph.h"
 #include <catch2/catch_test_macros.hpp>
+#include <initializer_list>
 #include <string>
-typedef PGraph<int,EmptyEdgeData, true> DirectedGraph;
+#include <utility>
+typedef PGraph<int, EmptyEdgeData, true> DirectedGraph;
+typedef PGraph<int> SG;
 
 TEST_CASE("PGraph Add Node", "[PGraph]") {
   PGraph<int> G;
@@ -16,61 +19,78 @@ TEST_CASE("PGraph Add Node", "[PGraph]") {
   REQUIRE_THROWS(G.get_node_data(1));
 }
 
+TEST_CASE("PGraph Add Edge", "[PGraph]") {
 
-TEST_CASE("PGraph Add Edge", "[PGraph]"){
+  PGraph<int> G;
+  for (int i = 0; i < 5; i++)
+    G.add_node(i);
+  G.add_edge(0, 1);
+  G.add_edge(0, 2);
+  G.add_edge(1, 3);
+  REQUIRE(G.get_node_count() == 5);
+  REQUIRE(G.get_edge_count() == 3);
 
-    PGraph<int>G;
-    for(int i=0; i < 5 ; i++)
-        G.add_node(i);
-    G.add_edge(0,1);
-    G.add_edge(0,2);
-    G.add_edge(1,3);
-    REQUIRE(G.get_node_count() == 5);
-    REQUIRE(G.get_edge_count() == 3);
-
-    REQUIRE_THROWS(G.add_edge(0,0));
-    REQUIRE_THROWS(G.add_edge(10,0));
-    REQUIRE_THROWS(G.add_edge(0,10));
+  REQUIRE_THROWS(G.add_edge(0, 0));
+  REQUIRE_THROWS(G.add_edge(10, 0));
+  REQUIRE_THROWS(G.add_edge(0, 10));
 }
 
-TEST_CASE("Test Degree","[PGraph]"){
+TEST_CASE("Test Degree", "[PGraph]") {
 
-    PGraph<std::string> G;
-    G.add_node("hi");
-    G.add_node("hello");
-    G.add_node("how");
-    G.add_node("are you");
+  PGraph<std::string> G;
+  G.add_node("hi");
+  G.add_node("hello");
+  G.add_node("how");
+  G.add_node("are you");
 
-    G.add_edge(0,1);
-    G.add_edge(0,2);
-    G.add_edge(0,3);
-    G.add_edge(1,3);
+  G.add_edge(0, 1);
+  G.add_edge(0, 2);
+  G.add_edge(0, 3);
+  G.add_edge(1, 3);
 
-    REQUIRE(G.degree(0)==3); 
-    REQUIRE_THROWS(G.degree(10));
+  REQUIRE(G.degree(0) == 3);
+  REQUIRE_THROWS(G.degree(10));
 }
 
+TEST_CASE("IN_DEGREE AND OUT_DEGREE", "[PGraph]") {
+  DirectedGraph G;
+  for (int i = 0; i < 5; i++) {
+    G.add_node(i);
+  }
+  G.add_edge(0, 1);
+  G.add_edge(0, 2);
+  G.add_edge(0, 3);
+  G.add_edge(1, 3);
+  G.add_edge(2, 3);
 
-TEST_CASE("IN_DEGREE AND OUT_DEGREE", "[PGraph]")
-{
-    DirectedGraph G;
-    for (int i=0; i < 5; i++) {
-        G.add_node(i);
-    }
-    G.add_edge(0,1);
-    G.add_edge(0,2);
-    G.add_edge(0,3);
-    G.add_edge(1,3);
-    G.add_edge(2,3);
+  REQUIRE_THROWS(G.in_degree(10));
+  REQUIRE_THROWS(G.out_degree(10));
 
-    REQUIRE_THROWS(G.in_degree(10));
-    REQUIRE_THROWS(G.out_degree(10));
+  REQUIRE(G.out_degree(0) == 3);
+  REQUIRE(G.in_degree(3) == 3);
+  REQUIRE(G.out_degree(2) == 1);
+  REQUIRE(G.out_degree(1) == 1);
+  REQUIRE(G.in_degree(1) == 1);
+  REQUIRE(G.in_degree(4) == 0);
+}
 
-    REQUIRE(G.out_degree(0)==3);
-    REQUIRE(G.in_degree(3)==3);
-    REQUIRE(G.out_degree(2)==1);
-    REQUIRE(G.out_degree(1)==1);
-    REQUIRE(G.in_degree(1)==1);
-    REQUIRE(G.in_degree(4)==0);
+TEST_CASE("Constructor Initialization", "[PGraph]") {
+  PGraph<int> G(10);
+  REQUIRE(G.get_node_count() == 10);
+  REQUIRE(G.adj().size() == 10);
+}
 
+TEST_CASE("Constructor Initializer List", "[PGraph]") {
+  SG G{4,
+       {
+           {0, 1},
+           {1, 3},
+           {2, 3},
+       }};
+
+  REQUIRE(G.get_node_count() == 4);
+  REQUIRE(G.get_edge_count() == 3);
+  REQUIRE(G.degree(0) == 1);
+  REQUIRE(G.degree(1) == 2);
+  REQUIRE(G.degree(2) == 1);
 }

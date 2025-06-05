@@ -1,7 +1,9 @@
 #pragma once
 #include <exception>
+#include <initializer_list>
 #include <string>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 struct EmptyEdgeData {};
@@ -32,7 +34,26 @@ private:
 
 public:
   PGraph() = default;
-  PGraph(int initial_node_count) {};
+  PGraph(int initial_node_count) {
+    _nodes.resize(initial_node_count);
+    _adj.resize(initial_node_count);
+  };
+
+  template <typename InputIt>
+  PGraph(int node_count, InputIt edge_begin, InputIt edge_end) {
+    _nodes.resize(node_count);
+    _adj.resize(node_count);
+    for (auto it = edge_begin; it != edge_end; ++it)
+      add_edge(it->first, it->second);
+  }
+
+  PGraph(int node_count,
+         std::initializer_list<std::pair<NodeIdType, NodeIdType>> edges) {
+    _nodes.resize(node_count);
+        _adj.resize(node_count);
+    for (const auto &pair : edges)
+      add_edge(pair.first, pair.second);
+  }
 
   static constexpr bool IsDirectedGraph = IsDirected;
 
@@ -73,6 +94,9 @@ public:
   int get_node_count() const { return _nodes.size(); }
   int get_edge_count() const { return _edge_count; }
 
+  const std::vector<InternalNode> nodes() const { return _nodes; }
+  const std::vector<std::vector<NodeIdType>> adj() const { return _adj; }
+
   int degree(NodeIdType ID) const {
     check_valid_node(ID, "DEGREE");
     return _adj[ID].size();
@@ -88,7 +112,7 @@ public:
   int in_degree(NodeIdType ID) const {
     check_valid_node(ID, "IN_DEGREE");
     int count = 0;
-    for (int u =0 ; u < _nodes.size() ; u++)
+    for (int u = 0; u < _nodes.size(); u++)
       for (NodeIdType v : _adj[u])
         if (ID == v)
           count++;
