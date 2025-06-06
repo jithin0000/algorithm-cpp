@@ -95,7 +95,7 @@ public:
   int get_edge_count() const { return _edge_count; }
 
   const std::vector<InternalNode> nodes() const { return _nodes; }
-  const std::vector<std::vector<NodeIdType>> adj() const { return _adj; }
+  const std::vector<std::vector<NodeIdType>>& adj() const { return _adj; }
 
   int degree(NodeIdType ID) const {
     check_valid_node(ID, "DEGREE");

@@ -14,6 +14,7 @@ add_library(graph_lib
     include/topological_sort.h
     include/symbol_graph.h
     include/PGraph.h
+    include/GraphVisualizer.h
 )
 
 # Make the include directory available
@@ -21,9 +22,11 @@ target_include_directories(graph_lib PUBLIC
     ${PROJECT_SOURCE_DIR}/include
 )
 
+find_package(SFML 3 REQUIRED COMPONENTS Graphics Audio Network)
+
 # Main executable
 add_executable(graph_main src/main.cpp)
-target_link_libraries(graph_main PRIVATE graph_lib)
+target_link_libraries(graph_main PRIVATE graph_lib SFML::Graphics SFML::Audio SFML::Network)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
