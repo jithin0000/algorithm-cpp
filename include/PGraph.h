@@ -5,10 +5,116 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <iterator>
+#include <concepts>
+
+
+namespace graphlib{
+
+template<typename NodeData, typename EdgeData, bool IsDirected=false> class PGraph;
+
+template<typename GraphClass, bool IsConstv>
+class NodeProxyImpl{
+
+public:
+    using ConcreteGraphType = GraphClass;
+    using GraphPtrType = std::conditional_t<IsConstv, const ConcreteGraphType*, ConcreteGraphType*>;
+    using NodeDataTypeRef = std::conditional_t<IsConstv, const typename ConcreteGraphType::NodeDataType& , typename ConcreteGraphType::NodeDataType&>;
+    using NodeIdType = typename ConcreteGraphType::NodeIdType;
+private:
+    GraphPtrType _graph_ptr;
+    NodeIdType _id;
+public:
+    NodeProxyImpl(GraphPtrType G, NodeIdType ID):_graph_ptr(G), _id(ID){
+        if(!_graph_ptr)throw std::logic_error("NodeProxyImpl:: Graph Pointer cannot be null ");
+    };
+    NodeIdType id()const{return _id;}
+    NodeDataTypeRef data()const{return _graph_ptr->get_node_data(_id);}
+    int degree()const{return _graph_ptr->degree(_id);}
+
+    NodeProxyImpl* operator->(){return this;}
+    const NodeProxyImpl* operator->()const{return this;}
+};
+
+
+// node iterator implemenation
+template<typename GraphClass, bool IsConstv>
+class NodeIteratorImpl{
+public:
+    using iterator_category = std::random_access_iterator_tag;
+    using value_type = NodeProxyImpl<GraphClass,IsConstv>;
+    using difference_type = std::ptrdiff_t;
+    using pointer =value_type;
+    using reference = value_type;
+private:
+    using GraphPtrType = std::conditional_t<IsConstv, const GraphClass*, GraphClass>;
+    GraphPtrType _graph_ptr =nullptr;
+    typename GraphClass::NodeIdType current_node_id=0;
+public:
+    NodeIteratorImpl()=default;
+    NodeIteratorImpl(GraphPtrType G, typename GraphClass::NodeIdType ID)
+    :_graph_ptr(G), current_node_id(ID){};
+
+    reference operator*()const{
+        if(!_graph_ptr)std::logic_error("Deference::NodeIteratorImpl");
+        return value_type(_graph_ptr,current_node_id);
+    }
+    pointer operator->()const{
+        if(!_graph_ptr)std::logic_error("Deference::NodeIteratorImpl");
+        return value_type(_graph_ptr,current_node_id);
+    }
+
+    NodeIteratorImpl& operator++(){
+        if(_graph_ptr && current_node_id < _graph_ptr->get_node_count())
+            current_node_id++;
+        else
+         current_node_id = _graph_ptr -> get_node_count();
+
+        return *this;
+    }
+
+    NodeIteratorImpl operator++(int){NodeIteratorImpl temp = *this; ++(*this);return temp;}
+
+    NodeIteratorImpl& operator--(){
+        if(_graph_ptr && current_node_id > 0 )current_node_id--;
+        return *this;
+    }
+
+    NodeIteratorImpl operator--(int){NodeIteratorImpl temp = *this; --(*this);return temp;}
+    NodeIteratorImpl& operator+=(difference_type n){
+        if(!_graph_ptr)return *this;
+        difference_type target_id_signed = static_cast<difference_type>(current_node_id) + n;
+        typename GraphClass::NodeIdType node_count = _graph_ptr -> get_node_count();
+        if(target_id_signed < 0 ) current_node_id=0;
+        else if (static_cast<typename GraphClass::NodeIdType>(target_id_signed) >= node_count )current_node_id=node_count;
+        else current_node_id = static_cast<typename GraphClass::NodeIdType>(target_id_signed);
+        return *this;
+    }
+
+
+    NodeIteratorImpl operator+(difference_type n)const{NodeIteratorImpl temp = *this; temp +=n ;return temp;}
+    NodeIteratorImpl operator-(difference_type n)const{NodeIteratorImpl temp = *this; temp -=n ;return temp;}
+    NodeIteratorImpl& operator-=(difference_type n)const{ return *this += (-n);}
+
+    difference_type operator-(const NodeIteratorImpl& other)const{
+        if(_graph_ptr != other._graph_ptr && ( _graph_ptr !=nullptr && other._graph_ptr !=nullptr) )
+            throw std::logic_error("Diffrent Graphs");
+        return static_cast<typename GraphClass::NodeIdType>(current_node_id) - static_cast<typename GraphClass::NodeIdType>(other.current_node_id);
+    }
+
+    reference operator[](difference_type n){ return *(*this+n);}
+
+
+
+
+
+
+};
+
 
 struct EmptyEdgeData {};
 template <typename NodeData, typename EdgeData = EmptyEdgeData,
-          bool IsDirected = false>
+          bool IsDirected>
 class PGraph {
 
 private:
@@ -94,7 +200,9 @@ public:
   int get_node_count() const { return _nodes.size(); }
   int get_edge_count() const { return _edge_count; }
 
-  const std::vector<InternalNode> nodes() const { return _nodes; }
+  std::vector<InternalNode>& nodes() { return _nodes; }
+  const std::vector<InternalNode>& nodes() const { return _nodes; }
+  std::vector<std::vector<NodeIdType>>& adj()  { return _adj; }
   const std::vector<std::vector<NodeIdType>>& adj() const { return _adj; }
 
   int degree(NodeIdType ID) const {
@@ -126,3 +234,9 @@ private:
     int out_degree_count = 0;
   };
 };
+
+
+namespace algorithms{
+
+};
+}

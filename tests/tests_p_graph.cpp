@@ -3,6 +3,7 @@
 #include <initializer_list>
 #include <string>
 #include <utility>
+using namespace graphlib;
 typedef PGraph<int, EmptyEdgeData, true> DirectedGraph;
 typedef PGraph<int> SG;
 

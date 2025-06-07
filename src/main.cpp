@@ -5,6 +5,8 @@
 #include <iostream>
 #include <optional>
 #include <unordered_map>
+using namespace graphlib;
+
 
 using namespace std;
 
@@ -19,6 +21,7 @@ int main() {
   graph.add_edge(2, 3);
   graph.add_edge(3, 4);
   graph.add_edge(4, 0);
+  graph.add_edge(1, 3);
 
   // Compute layout
   ForceDirectedLayout layout(graph);
@@ -92,7 +95,7 @@ void renderGraph(
       circle.setPosition(
           {static_cast<float>(pos.first - centerX + windowCenterX - 10),
            static_cast<float>(pos.second - centerY + windowCenterY - 10)});
-      circle.setFillColor(sf::Color::Green);
+            circle.setFillColor(sf::Color::Blue);
       window.draw(circle);
 
       // Draw node ID at the center
