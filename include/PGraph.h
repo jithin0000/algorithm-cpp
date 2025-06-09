@@ -1,127 +1,183 @@
 #pragma once
+#include <concepts>
 #include <exception>
 #include <initializer_list>
+#include <iterator>
 #include <string>
 #include <type_traits>
 #include <utility>
 #include <vector>
-#include <iterator>
 #include <concepts>
 
+namespace graphlib {
 
-namespace graphlib{
+template <typename NodeData, typename EdgeData, bool IsDirected = false>
+class PGraph;
 
-template<typename NodeData, typename EdgeData, bool IsDirected=false> class PGraph;
-
-template<typename GraphClass, bool IsConstv>
-class NodeProxyImpl{
+template <typename GraphClass, bool IsConstv> class NodeProxyImpl {
 
 public:
-    using ConcreteGraphType = GraphClass;
-    using GraphPtrType = std::conditional_t<IsConstv, const ConcreteGraphType*, ConcreteGraphType*>;
-    using NodeDataTypeRef = std::conditional_t<IsConstv, const typename ConcreteGraphType::NodeDataType& , typename ConcreteGraphType::NodeDataType&>;
-    using NodeIdType = typename ConcreteGraphType::NodeIdType;
+  using ConcreteGraphType = GraphClass;
+  using GraphPtrType = std::conditional_t<IsConstv, const ConcreteGraphType *,
+                                          ConcreteGraphType *>;
+  using NodeDataTypeRef =
+      std::conditional_t<IsConstv,
+                         const typename ConcreteGraphType::NodeDataType &,
+                         typename ConcreteGraphType::NodeDataType &>;
+  using NodeIdType = typename ConcreteGraphType::NodeIdType;
+
 private:
-    GraphPtrType _graph_ptr;
-    NodeIdType _id;
+  GraphPtrType _graph_ptr;
+  NodeIdType _id;
+
 public:
-    NodeProxyImpl(GraphPtrType G, NodeIdType ID):_graph_ptr(G), _id(ID){
-        if(!_graph_ptr)throw std::logic_error("NodeProxyImpl:: Graph Pointer cannot be null ");
-    };
-    NodeIdType id()const{return _id;}
-    NodeDataTypeRef data()const{return _graph_ptr->get_node_data(_id);}
-    int degree()const{return _graph_ptr->degree(_id);}
+  NodeProxyImpl(GraphPtrType G, NodeIdType ID) : _graph_ptr(G), _id(ID) {
+    if (!_graph_ptr)
+      throw std::logic_error("NodeProxyImpl:: Graph Pointer cannot be null ");
+  };
+  NodeIdType id() const { return _id; }
+  NodeDataTypeRef data() const { return _graph_ptr->get_node_data(_id); }
+  int degree() const { return _graph_ptr->degree(_id); }
 
-    NodeProxyImpl* operator->(){return this;}
-    const NodeProxyImpl* operator->()const{return this;}
+  NodeProxyImpl *operator->() { return this; }
+  const NodeProxyImpl *operator->() const { return this; }
 };
-
 
 // node iterator implemenation
-template<typename GraphClass, bool IsConstv>
-class NodeIteratorImpl{
+template <typename GraphClass, bool IsConstv>
+class NodeIteratorImpl {
 public:
-    using iterator_category = std::random_access_iterator_tag;
-    using value_type = NodeProxyImpl<GraphClass,IsConstv>;
-    using difference_type = std::ptrdiff_t;
-    using pointer =value_type;
-    using reference = value_type;
+  using iterator_category = std::random_access_iterator_tag;
+  using value_type = NodeProxyImpl<GraphClass, IsConstv>;
+  using difference_type = std::ptrdiff_t;
+  using pointer = value_type;
+  using reference = value_type;
+
 private:
-    using GraphPtrType = std::conditional_t<IsConstv, const GraphClass*, GraphClass>;
-    GraphPtrType _graph_ptr =nullptr;
-    typename GraphClass::NodeIdType current_node_id=0;
+  using GraphPtrType =
+      std::conditional_t<IsConstv, const GraphClass *, GraphClass*>;
+  GraphPtrType _graph_ptr = nullptr;
+  typename GraphClass::NodeIdType current_node_id = 0;
+
 public:
-    NodeIteratorImpl()=default;
-    NodeIteratorImpl(GraphPtrType G, typename GraphClass::NodeIdType ID)
-    :_graph_ptr(G), current_node_id(ID){};
+  NodeIteratorImpl() = default;
+  NodeIteratorImpl(GraphPtrType G, typename GraphClass::NodeIdType ID)
+      : _graph_ptr(G), current_node_id(ID) {};
 
-    reference operator*()const{
-        if(!_graph_ptr)std::logic_error("Deference::NodeIteratorImpl");
-        return value_type(_graph_ptr,current_node_id);
-    }
-    pointer operator->()const{
-        if(!_graph_ptr)std::logic_error("Deference::NodeIteratorImpl");
-        return value_type(_graph_ptr,current_node_id);
-    }
+  reference operator*() const {
+    if (!_graph_ptr)
+      std::logic_error("Deference::NodeIteratorImpl");
+    return value_type(_graph_ptr, current_node_id);
+  }
+  pointer operator->() const {
+    if (!_graph_ptr)
+      std::logic_error("Deference::NodeIteratorImpl");
+    return value_type(_graph_ptr, current_node_id);
+  }
 
-    NodeIteratorImpl& operator++(){
-        if(_graph_ptr && current_node_id < _graph_ptr->get_node_count())
-            current_node_id++;
-        else
-         current_node_id = _graph_ptr -> get_node_count();
+  NodeIteratorImpl &operator++() {
+    if (_graph_ptr && current_node_id < _graph_ptr->get_node_count())
+      current_node_id++;
+    else
+      current_node_id = _graph_ptr->get_node_count();
 
-        return *this;
-    }
+    return *this;
+  }
 
-    NodeIteratorImpl operator++(int){NodeIteratorImpl temp = *this; ++(*this);return temp;}
+  NodeIteratorImpl operator++(int) {
+    NodeIteratorImpl temp = *this;
+    ++(*this);
+    return temp;
+  }
 
-    NodeIteratorImpl& operator--(){
-        if(_graph_ptr && current_node_id > 0 )current_node_id--;
-        return *this;
-    }
+  NodeIteratorImpl &operator--() {
+    if (_graph_ptr && current_node_id > 0)
+      current_node_id--;
+    return *this;
+  }
 
-    NodeIteratorImpl operator--(int){NodeIteratorImpl temp = *this; --(*this);return temp;}
-    NodeIteratorImpl& operator+=(difference_type n){
-        if(!_graph_ptr)return *this;
-        difference_type target_id_signed = static_cast<difference_type>(current_node_id) + n;
-        typename GraphClass::NodeIdType node_count = _graph_ptr -> get_node_count();
-        if(target_id_signed < 0 ) current_node_id=0;
-        else if (static_cast<typename GraphClass::NodeIdType>(target_id_signed) >= node_count )current_node_id=node_count;
-        else current_node_id = static_cast<typename GraphClass::NodeIdType>(target_id_signed);
-        return *this;
-    }
+  NodeIteratorImpl operator--(int) {
+    NodeIteratorImpl temp = *this;
+    --(*this);
+    return temp;
+  }
+  NodeIteratorImpl &operator+=(difference_type n) {
+    if (!_graph_ptr)
+      return *this;
+    difference_type target_id_signed =
+        static_cast<difference_type>(current_node_id) + n;
+    typename GraphClass::NodeIdType node_count = _graph_ptr->get_node_count();
+    if (target_id_signed < 0)
+      current_node_id = 0;
+    else if (static_cast<typename GraphClass::NodeIdType>(target_id_signed) >=
+             node_count)
+      current_node_id = node_count;
+    else
+      current_node_id =
+          static_cast<typename GraphClass::NodeIdType>(target_id_signed);
+    return *this;
+  }
 
+  NodeIteratorImpl operator+(difference_type n) const {
+    NodeIteratorImpl temp = *this;
+    temp += n;
+    return temp;
+  }
+  NodeIteratorImpl operator-(difference_type n) const {
+    NodeIteratorImpl temp = *this;
+    temp -= n;
+    return temp;
+  }
+  NodeIteratorImpl &operator-=(difference_type n) const {
+    return *this += (-n);
+  }
 
-    NodeIteratorImpl operator+(difference_type n)const{NodeIteratorImpl temp = *this; temp +=n ;return temp;}
-    NodeIteratorImpl operator-(difference_type n)const{NodeIteratorImpl temp = *this; temp -=n ;return temp;}
-    NodeIteratorImpl& operator-=(difference_type n)const{ return *this += (-n);}
+  difference_type operator-(const NodeIteratorImpl &other) const {
+    if (_graph_ptr != other._graph_ptr &&
+        (_graph_ptr != nullptr && other._graph_ptr != nullptr))
+      throw std::logic_error("Diffrent Graphs");
+    return static_cast<typename GraphClass::NodeIdType>(current_node_id) -
+           static_cast<typename GraphClass::NodeIdType>(other.current_node_id);
+  }
 
-    difference_type operator-(const NodeIteratorImpl& other)const{
-        if(_graph_ptr != other._graph_ptr && ( _graph_ptr !=nullptr && other._graph_ptr !=nullptr) )
-            throw std::logic_error("Diffrent Graphs");
-        return static_cast<typename GraphClass::NodeIdType>(current_node_id) - static_cast<typename GraphClass::NodeIdType>(other.current_node_id);
-    }
+  reference operator[](difference_type n) { return *(*this + n); }
 
-    reference operator[](difference_type n){ return *(*this+n);}
-
-
-
-
-
-
+  friend bool operator==(const NodeIteratorImpl &lhs,
+                         const NodeIteratorImpl &rhs) {
+    if (!lhs._graph_ptr && !rhs._graph_ptr)
+      return lhs.current_node_id == rhs.current_node_id;
+    return lhs._graph_ptr == rhs._graph_ptr &&
+           lhs.current_node_id == rhs.current_node_id;
+  }
+  friend bool operator!=(const NodeIteratorImpl &lhs,
+                         const NodeIteratorImpl &rhs) {
+    return !(lhs == rhs);
+  }
+  friend bool operator<(const NodeIteratorImpl &lhs,
+                        const NodeIteratorImpl &rhs) {
+    if (lhs._graph_ptr != rhs._graph_ptr &&
+        (lhs._graph_ptr != nullptr && rhs._graph_ptr != nullptr))
+      throw std::logic_error("Diffrent Graphs");
+    return lhs.current_node_id < rhs.current_node_id;
+  }
+    friend bool operator>(const NodeIteratorImpl& lhs, const NodeIteratorImpl& rhs){return rhs < lhs;}
+    friend bool operator<=(const NodeIteratorImpl& lhs, const NodeIteratorImpl& rhs){return !(rhs < lhs);}
+    friend bool operator>=(const NodeIteratorImpl& lhs, const NodeIteratorImpl& rhs){return !(lhs < rhs);}
 };
 
-
 struct EmptyEdgeData {};
-template <typename NodeData, typename EdgeData = EmptyEdgeData,
-          bool IsDirected>
+
+
+
+template <typename NodeData, typename EdgeData = EmptyEdgeData, bool IsDirected>
 class PGraph {
 
-private:
+public:
   using NodeID = int;
   using NodeIdType = NodeID;
   using NodeDataType = NodeData;
   using EdgeDataType = EdgeData;
+private:
   struct InternalNode;
   int _edge_count = 0;
 
@@ -137,6 +193,12 @@ private:
     if (ID >= _nodes.size())
       throw std::out_of_range(std::string("out of range::") + METHOD);
   }
+
+private:
+    using NodeProxy = NodeProxyImpl<PGraph<NodeData, EdgeData, IsDirected>, false>;
+    using ConstNodeProxy = NodeProxyImpl<PGraph<NodeData, EdgeData, IsDirected>, true>;
+    using NodeIterator = NodeIteratorImpl<PGraph<NodeData,EdgeData, IsDirected>,false>;
+    using ConstNodeIterator = NodeIteratorImpl<PGraph<NodeData,EdgeData, IsDirected>,true>;
 
 public:
   PGraph() = default;
@@ -156,7 +218,7 @@ public:
   PGraph(int node_count,
          std::initializer_list<std::pair<NodeIdType, NodeIdType>> edges) {
     _nodes.resize(node_count);
-        _adj.resize(node_count);
+    _adj.resize(node_count);
     for (const auto &pair : edges)
       add_edge(pair.first, pair.second);
   }
@@ -200,10 +262,10 @@ public:
   int get_node_count() const { return _nodes.size(); }
   int get_edge_count() const { return _edge_count; }
 
-  std::vector<InternalNode>& nodes() { return _nodes; }
-  const std::vector<InternalNode>& nodes() const { return _nodes; }
-  std::vector<std::vector<NodeIdType>>& adj()  { return _adj; }
-  const std::vector<std::vector<NodeIdType>>& adj() const { return _adj; }
+  std::vector<InternalNode> &nodes() { return _nodes; }
+  const std::vector<InternalNode> &nodes() const { return _nodes; }
+  std::vector<std::vector<NodeIdType>> &adj() { return _adj; }
+  const std::vector<std::vector<NodeIdType>> &adj() const { return _adj; }
 
   int degree(NodeIdType ID) const {
     check_valid_node(ID, "DEGREE");
@@ -228,6 +290,15 @@ public:
     return count;
   }
 
+ NodeIterator nodes_begin(){return NodeIterator(this,0);}
+ NodeIterator nodes_end(){return NodeIterator(this,get_node_count());}
+ ConstNodeIterator nodes_begin()const{return ConstNodeIterator(this,0);}
+ ConstNodeIterator nodes_end()const{return ConstNodeIterator(this,get_node_count());}
+ ConstNodeIterator cnodes_begin()const{return ConstNodeIterator(this,0);}
+ ConstNodeIterator cnodes_end()const{return ConstNodeIterator(this,get_node_count());}
+
+
+
 private:
   struct InternalNode {
     NodeDataType data;
@@ -235,8 +306,5 @@ private:
   };
 };
 
-
-namespace algorithms{
-
-};
-}
+namespace algorithms {};
+} // namespace graphlib

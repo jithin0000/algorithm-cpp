@@ -95,3 +95,18 @@ TEST_CASE("Constructor Initializer List", "[PGraph]") {
   REQUIRE(G.degree(1) == 2);
   REQUIRE(G.degree(2) == 1);
 }
+
+TEST_CASE("Basic Iterator","[PGraph]")
+{
+    SG G(3);
+    auto it = G.nodes_begin();
+    REQUIRE(it->id()==0);
+    REQUIRE((*it).id()==0);
+    ++it;
+    REQUIRE(it->id()==1);
+    it++;
+    REQUIRE(it->id()==2);
+    ++it;
+    REQUIRE(it==G.nodes_end());
+
+}
