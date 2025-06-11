@@ -2,4 +2,6 @@
 *.sh
 .cache
 /.cache
+/.vscode
+.vscode
 

@@ -7,7 +7,6 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-#include <concepts>
 
 namespace graphlib {
 
@@ -44,8 +43,7 @@ public:
 };
 
 // node iterator implemenation
-template <typename GraphClass, bool IsConstv>
-class NodeIteratorImpl {
+template <typename GraphClass, bool IsConstv> class NodeIteratorImpl {
 public:
   using iterator_category = std::random_access_iterator_tag;
   using value_type = NodeProxyImpl<GraphClass, IsConstv>;
@@ -55,7 +53,7 @@ public:
 
 private:
   using GraphPtrType =
-      std::conditional_t<IsConstv, const GraphClass *, GraphClass*>;
+      std::conditional_t<IsConstv, const GraphClass *, GraphClass *>;
   GraphPtrType _graph_ptr = nullptr;
   typename GraphClass::NodeIdType current_node_id = 0;
 
@@ -128,8 +126,8 @@ public:
     temp -= n;
     return temp;
   }
-  NodeIteratorImpl &operator-=(difference_type n) const {
-    return *this += (-n);
+  NodeIteratorImpl &operator-=(difference_type n) {
+    return *this +=(-n);
   }
 
   difference_type operator-(const NodeIteratorImpl &other) const {
@@ -160,14 +158,21 @@ public:
       throw std::logic_error("Diffrent Graphs");
     return lhs.current_node_id < rhs.current_node_id;
   }
-    friend bool operator>(const NodeIteratorImpl& lhs, const NodeIteratorImpl& rhs){return rhs < lhs;}
-    friend bool operator<=(const NodeIteratorImpl& lhs, const NodeIteratorImpl& rhs){return !(rhs < lhs);}
-    friend bool operator>=(const NodeIteratorImpl& lhs, const NodeIteratorImpl& rhs){return !(lhs < rhs);}
+  friend bool operator>(const NodeIteratorImpl &lhs,
+                        const NodeIteratorImpl &rhs) {
+    return rhs < lhs;
+  }
+  friend bool operator<=(const NodeIteratorImpl &lhs,
+                         const NodeIteratorImpl &rhs) {
+    return !(rhs < lhs);
+  }
+  friend bool operator>=(const NodeIteratorImpl &lhs,
+                         const NodeIteratorImpl &rhs) {
+    return !(lhs < rhs);
+  }
 };
 
 struct EmptyEdgeData {};
-
-
 
 template <typename NodeData, typename EdgeData = EmptyEdgeData, bool IsDirected>
 class PGraph {
@@ -177,8 +182,12 @@ public:
   using NodeIdType = NodeID;
   using NodeDataType = NodeData;
   using EdgeDataType = EdgeData;
+
 private:
-  struct InternalNode;
+  struct InternalNode {
+    NodeDataType data;
+    int out_degree_count = 0;
+  };
   int _edge_count = 0;
 
   std::vector<InternalNode> _nodes;
@@ -195,30 +204,31 @@ private:
   }
 
 private:
-    using NodeProxy = NodeProxyImpl<PGraph<NodeData, EdgeData, IsDirected>, false>;
-    using ConstNodeProxy = NodeProxyImpl<PGraph<NodeData, EdgeData, IsDirected>, true>;
-    using NodeIterator = NodeIteratorImpl<PGraph<NodeData,EdgeData, IsDirected>,false>;
-    using ConstNodeIterator = NodeIteratorImpl<PGraph<NodeData,EdgeData, IsDirected>,true>;
+  using NodeProxy =
+      NodeProxyImpl<PGraph<NodeData, EdgeData, IsDirected>, false>;
+  using ConstNodeProxy =
+      NodeProxyImpl<PGraph<NodeData, EdgeData, IsDirected>, true>;
+  using NodeIterator =
+      NodeIteratorImpl<PGraph<NodeData, EdgeData, IsDirected>, false>;
+  using ConstNodeIterator =
+      NodeIteratorImpl<PGraph<NodeData, EdgeData, IsDirected>, true>;
 
 public:
   PGraph() = default;
-  PGraph(int initial_node_count) {
-    _nodes.resize(initial_node_count);
-    _adj.resize(initial_node_count);
-  };
+  explicit PGraph(int initial_node_count) {
+    _nodes.reserve(initial_node_count);
+    _adj.reserve(initial_node_count);
+  }
 
   template <typename InputIt>
-  PGraph(int node_count, InputIt edge_begin, InputIt edge_end) {
-    _nodes.resize(node_count);
-    _adj.resize(node_count);
+  PGraph(int node_count, InputIt edge_begin, InputIt edge_end):_nodes(node_count),_adj(node_count) {
     for (auto it = edge_begin; it != edge_end; ++it)
       add_edge(it->first, it->second);
   }
 
   PGraph(int node_count,
-         std::initializer_list<std::pair<NodeIdType, NodeIdType>> edges) {
-    _nodes.resize(node_count);
-    _adj.resize(node_count);
+         std::initializer_list<std::pair<NodeIdType, NodeIdType>> edges)
+      : _nodes(node_count), _adj(node_count) {
     for (const auto &pair : edges)
       add_edge(pair.first, pair.second);
   }
@@ -290,20 +300,16 @@ public:
     return count;
   }
 
- NodeIterator nodes_begin(){return NodeIterator(this,0);}
- NodeIterator nodes_end(){return NodeIterator(this,get_node_count());}
- ConstNodeIterator nodes_begin()const{return ConstNodeIterator(this,0);}
- ConstNodeIterator nodes_end()const{return ConstNodeIterator(this,get_node_count());}
- ConstNodeIterator cnodes_begin()const{return ConstNodeIterator(this,0);}
- ConstNodeIterator cnodes_end()const{return ConstNodeIterator(this,get_node_count());}
-
-
-
-private:
-  struct InternalNode {
-    NodeDataType data;
-    int out_degree_count = 0;
-  };
+  NodeIterator begin() { return NodeIterator(this, 0); }
+  NodeIterator end() { return NodeIterator(this, get_node_count()); }
+  ConstNodeIterator begin() const { return ConstNodeIterator(this, 0); }
+  ConstNodeIterator end() const {
+    return ConstNodeIterator(this, get_node_count());
+  }
+  ConstNodeIterator cbegin() const { return ConstNodeIterator(this, 0); }
+  ConstNodeIterator cend() const {
+    return ConstNodeIterator(this, get_node_count());
+  }
 };
 
 namespace algorithms {};
