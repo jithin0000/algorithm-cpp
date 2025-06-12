@@ -160,6 +160,28 @@ TEST_CASE("ConstIterator","[PGraph]")
     REQUIRE(it->id()==0);
 
 }
+TEST_CASE("EdgeCases", "[PGraph]")
+{
+    SG G(1);
+    REQUIRE(G.begin()==G.end());
+
+    G.add_node(10);
+    REQUIRE_FALSE(G.begin()==G.end());
+    REQUIRE(++G.begin()==G.end());
+}
+TEST_CASE("NodeProxy", "[PGraph]"){
+    SG G(2);
+    G.add_node(42);
+    G.add_node(23);
+    G.add_edge(0,1);
+
+    auto node = *G.begin();
+    REQUIRE(node.id()==0);
+    REQUIRE(node.degree()==1);
+    REQUIRE(node.data()==42);
+}
+
+
 
 
 
