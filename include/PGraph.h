@@ -3,6 +3,9 @@
 #include <exception>
 #include <initializer_list>
 #include <iterator>
+#include <map>
+#include <queue>
+#include <set>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -10,6 +13,7 @@
 
 namespace graphlib {
 
+struct EmptyEdgeData {};
 template <typename NodeData, typename EdgeData, bool IsDirected = false>
 class PGraph;
 
@@ -126,9 +130,7 @@ public:
     temp -= n;
     return temp;
   }
-  NodeIteratorImpl &operator-=(difference_type n) {
-    return *this +=(-n);
-  }
+  NodeIteratorImpl &operator-=(difference_type n) { return *this += (-n); }
 
   difference_type operator-(const NodeIteratorImpl &other) const {
     if (_graph_ptr != other._graph_ptr &&
@@ -172,7 +174,124 @@ public:
   }
 };
 
-struct EmptyEdgeData {};
+template <typename GraphClassType, bool IsConstV> class EdgeProxyImpl {
+public:
+  using ConcreteGraphType = GraphClassType;
+  using NodeIdType = typename ConcreteGraphType::NodeIdType;
+  using GraphPtrType = std::conditional_t<IsConstV, const ConcreteGraphType *,
+                                          ConcreteGraphType *>;
+  using EdgeDataType = typename ConcreteGraphType::EdgeDataType;
+  using EdgeDataTypeRef =
+      std::conditional_t<IsConstV, const EdgeDataType &, EdgeDataType &>;
+  using NodeProxyType = NodeProxyImpl<GraphClassType, IsConstV>;
+
+private:
+  GraphPtrType g_ptr;
+  NodeIdType source_node_id;
+  NodeIdType target_node_id;
+
+public:
+  EdgeProxyImpl(GraphPtrType g, NodeIdType u, NodeIdType v)
+      : g_ptr(g), source_node_id(u), target_node_id(v) {
+    if (!g) {
+      throw std::logic_error("Graph pointer cannot be null ");
+    }
+  };
+
+  NodeIdType source_id() const { return source_node_id; }
+  NodeIdType target_id() const { return target_node_id; }
+
+  NodeProxyType source_node() const {
+    return NodeProxyImpl(g_ptr, source_node_id);
+  }
+  NodeProxyType target_node() const {
+    return NodeProxyImpl(g_ptr, target_node_id);
+  }
+
+  EdgeProxyImpl *operator->() { return this; }
+  const EdgeProxyImpl *operator->() const { return this; }
+
+  EdgeDataTypeRef data() const {
+    if constexpr (std::is_same_v<EdgeDataType, EmptyEdgeData>) {
+      static EmptyEdgeData ed;
+      return ed;
+    } else {
+      throw std::logic_error("not implemented yet");
+    }
+  }
+};
+
+template <typename GraphClass, bool IsConstV> class EdgeIteratorImpl {
+public:
+  using iterator_category = std::forward_iterator_tag;
+  using value_type = EdgeProxyImpl<GraphClass, IsConstV>;
+  using difference_type = std::ptrdiff_t;
+  using pointer = value_type;
+  using reference = value_type;
+
+private:
+  using GraphPtrType =
+      std::conditional_t<IsConstV, const GraphClass *, GraphClass *>;
+  using NodeIdType = typename GraphClass::NodeIdType;
+
+  GraphPtrType graph_ptr = nullptr;
+  NodeIdType current_u = 0;
+  typename std::vector<NodeIdType>::const_iterator current_v_iter;
+  typename std::vector<NodeIdType>::const_iterator adj_list_end_iter;
+
+  void advance_to_next_valid_edge() {
+    if (!graph_ptr)
+      return;
+
+    while (current_u < graph_ptr->get_node_count()) {
+      if (current_u < graph_ptr->get_node_count()) {
+        const auto &adj_list_for_u =
+            graph_ptr->get_neighbors_list_internal(current_u);
+        if (current_v_iter == adj_list_for_u.end() ||
+            current_v_iter == adj_list_end_iter) {
+          current_v_iter = adj_list_for_u.begin();
+          adj_list_end_iter = adj_list_for_u.end();
+        }
+      }
+
+      while (current_v_iter != adj_list_end_iter) {
+        NodeIdType current_v = *current_v_iter;
+
+        if constexpr (GraphClass::IsDirectedGraph) {
+          return;
+        } else {
+          if (current_u < current_v)
+            return;
+        }
+        ++current_v_iter;
+      }
+      current_u++;
+
+      if (current_u < graph_ptr->get_node_count()) {
+        const auto &next_adj_list =
+            graph_ptr->get_neighbors_list_internal(current_u);
+        current_v_iter = next_adj_list.begin();
+        adj_list_end_iter = next_adj_list.end();
+      } else {
+        break;
+      }
+    }
+  };
+
+public:
+  EdgeIteratorImpl() = default;
+  EdgeIteratorImpl(GraphPtrType graph, NodeIdType start_u_id)
+      : graph_ptr(graph), current_u(start_u_id) {
+    if (graph_ptr && current_u < graph_ptr->get_node_count()) {
+      const auto &adj_list = graph_ptr->get_neighbors_list_internal(current_u);
+      current_v_iter = adj_list.begin();
+      adj_list_end_iter = adj_list.end();
+      advance_to_next_valid_edge();
+    } else if (graph_ptr) {
+      current_u = graph_ptr->get_node_count();
+    }
+  }
+};
 
 template <typename NodeData, typename EdgeData = EmptyEdgeData, bool IsDirected>
 class PGraph {
@@ -192,6 +311,12 @@ private:
 
   std::vector<InternalNode> _nodes;
   std::vector<std::vector<NodeID>> _adj;
+
+  const std::vector<NodeIdType> &
+  get_neighbors_list_internal(NodeIdType ID) const {
+    check_valid_node(ID);
+    return _adj[ID];
+  }
 
   void check_valid_node(NodeIdType ID, std::string METHOD) {
     if (ID >= _nodes.size())
@@ -221,7 +346,8 @@ public:
   }
 
   template <typename InputIt>
-  PGraph(int node_count, InputIt edge_begin, InputIt edge_end):_nodes(node_count),_adj(node_count) {
+  PGraph(int node_count, InputIt edge_begin, InputIt edge_end)
+      : _nodes(node_count), _adj(node_count) {
     for (auto it = edge_begin; it != edge_end; ++it)
       add_edge(it->first, it->second);
   }
@@ -312,5 +438,42 @@ public:
   }
 };
 
-namespace algorithms {};
+namespace algorithms {
+template <typename NodeIdType> struct BfsResult {
+  std::set<NodeIdType> visited;
+  std::map<NodeIdType, int> distances;
+  std::map<NodeIdType, NodeIdType> predecessors;
+};
+
+template <typename G>
+BfsResult<typename G::NodeIdType> bfs(const G &g,
+                                      typename G::NodeIdType start_node) {
+
+  if (start_node >= g.get_node_count())
+    throw std::out_of_range("out of range");
+  using NodeId = typename G::NodeIdType;
+  BfsResult<NodeId> result;
+  std::queue<NodeId> q;
+
+  q.push(start_node);
+  result.distances[start_node] = 0;
+  result.visited.insert(start_node);
+
+  while (!q.empty()) {
+    NodeId u = q.front();
+    q.pop();
+    for (NodeId v : g.adj()[u]) {
+      if (result.visited.find(v) == result.visited.end()) {
+        result.visited.insert(v);
+        result.distances[v] = result.distances[u] + 1;
+        result.predecessors[v] = u;
+        q.push(v);
+      }
+    }
+  }
+  return result;
+}
+
+}; // namespace algorithms
 } // namespace graphlib
+//

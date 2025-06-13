@@ -181,6 +181,16 @@ TEST_CASE("NodeProxy", "[PGraph]"){
     REQUIRE(node.data()==42);
 }
 
+TEST_CASE("Bfs","[PGraph]")
+{
+   SG G(0);
+    G.add_node(0);
+    auto result = algorithms::bfs(G,0);
+
+    REQUIRE(result.visited.size()==1);
+    REQUIRE(result.distances.size()==1);
+
+}
 
 
 
