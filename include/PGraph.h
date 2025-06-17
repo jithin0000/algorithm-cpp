@@ -438,42 +438,5 @@ public:
   }
 };
 
-namespace algorithms {
-template <typename NodeIdType> struct BfsResult {
-  std::set<NodeIdType> visited;
-  std::map<NodeIdType, int> distances;
-  std::map<NodeIdType, NodeIdType> predecessors;
-};
-
-template <typename G>
-BfsResult<typename G::NodeIdType> bfs(const G &g,
-                                      typename G::NodeIdType start_node) {
-
-  if (start_node >= g.get_node_count())
-    throw std::out_of_range("out of range");
-  using NodeId = typename G::NodeIdType;
-  BfsResult<NodeId> result;
-  std::queue<NodeId> q;
-
-  q.push(start_node);
-  result.distances[start_node] = 0;
-  result.visited.insert(start_node);
-
-  while (!q.empty()) {
-    NodeId u = q.front();
-    q.pop();
-    for (NodeId v : g.adj()[u]) {
-      if (result.visited.find(v) == result.visited.end()) {
-        result.visited.insert(v);
-        result.distances[v] = result.distances[u] + 1;
-        result.predecessors[v] = u;
-        q.push(v);
-      }
-    }
-  }
-  return result;
-}
-
-}; // namespace algorithms
 } // namespace graphlib
 //
