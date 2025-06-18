@@ -15,6 +15,9 @@ add_library(graph_lib
     include/symbol_graph.h
     include/PGraph.h
     include/GraphVisualizer.h
+    include/dfs_graph.h
+    include/bfs_graph.h
+    include/Path.h
 )
 
 # Make the include directory available
@@ -52,6 +55,7 @@ if(BUILD_TESTS)
     tests/tests_topological_sort.cpp
     tests/tests_symbol_graph.cpp
     tests/tests_p_graph.cpp
+    tests/tests_dfs.cpp
     )
     target_link_libraries(graph_tests PRIVATE graph_lib Catch2::Catch2WithMain)
 endif()
