@@ -19,7 +19,7 @@ public:
   void initializer() {
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_real_distribution<double> dist(0.0, 500.0);
+    std::uniform_real_distribution<double> dist(0.0, 800.0);
     for (int id = 0; id < G.get_node_count(); id++) {
       NodeIdToX[id] = dist(gen);
       NodeIdToY[id] = dist(gen);

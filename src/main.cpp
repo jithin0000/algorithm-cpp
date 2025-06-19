@@ -3,13 +3,18 @@
 #include "Path.h"
 #include <SFML/Graphics.hpp>
 #include <array>
+#include <fstream>
 #include <iostream>
 #include <optional>
+#include <sstream>
 #include <stack>
 #include <unordered_map>
 using namespace graphlib;
 
 using namespace std;
+
+std::string tiny = "/Users/simelabs/Documents/learn/alogoritm-cpp/resources/tinyEWG.txt";
+std::string medium = "/Users/simelabs/Downloads/mediumEWG.txt";
 
 void renderGraph(
     const PGraph<std::string> &graph,
@@ -36,21 +41,53 @@ int main() {
   //          << ")\n";
   // }
   ///
+  ///
 
-  PGraph<std::string> graph;
+  std::ifstream input(tiny);
+  if (!input.is_open()) {
+    std::cerr << "Failed to open file" << std::endl;
+    return 1;
+  }
+
+  int number_of_vertices;
+  std::string line;
+  std::vector<std::pair<int, int>> edges;
+  if (std::getline(input, line)) {
+  std:
+    istringstream iss(line);
+    if (!(iss >> number_of_vertices)) {
+      return 1;
+    }
+  }
+  std::getline(input, line);
+  while (std::getline(input, line)) {
+    std::istringstream iss(line);
+    int first, second;
+    float third;
+    if (iss >> first >> second >> third) {
+      edges.emplace_back(first, second);
+    } else {
+      std::cerr << "incorrect line format " << std::endl;
+    }
+  }
+
+  input.close();
+
+  PGraph<std::string> graph(number_of_vertices);
   std::string value = "Node ";
-  for (int i = 0; i < 5; i++) {
+  for (int i = 0; i < number_of_vertices; i++) {
     value += std::to_string(i);
     graph.add_node(value);
   }
-  graph.add_edge(0, 1);
-  graph.add_edge(1, 2);
-  graph.add_edge(2, 0);
+
+  for (const auto &edge : edges) {
+    graph.add_edge(edge.first, edge.second);
+  }
 
   ForceDirectedLayout layout(graph);
   layout.simulate(100);
   auto positions = layout.getPositions();
-  Path::DfsPath dfs(graph, 0);
+  Path::BfsPath dfs(graph, 0);
   auto path = dfs.pathTo(2);
   std::vector<int> pathv;
   while (!path.empty()) {
@@ -65,7 +102,7 @@ void renderGraph(
     const PGraph<std::string> &graph,
     const std::unordered_map<int, std::pair<double, double>> &positions,
     const std::vector<int> &path) {
-  sf::RenderWindow window(sf::VideoMode({800, 600}, 24), "Graph Visualizer");
+  sf::RenderWindow window(sf::VideoMode({800, 800}, 24), "Graph Visualizer");
 
   // --- Center the graph in the window ---
   double minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
@@ -78,7 +115,7 @@ void renderGraph(
   double centerX = (minX + maxX) / 2.0;
   double centerY = (minY + maxY) / 2.0;
   double windowCenterX = 400; // half of 800
-  double windowCenterY = 300; // half of 600
+  double windowCenterY = 400; // half of 600
 
   sf::Clock animationClock;
   const sf::Time animationDuration = sf::seconds(3.0f);
@@ -100,7 +137,7 @@ void renderGraph(
       }
     }
 
-    window.clear(sf::Color::White);
+    window.clear(sf::Color(128, 128, 128));
     // Draw edges
     for (int u = 0; u < graph.get_node_count(); u++) {
       for (int v : graph.adj()[u]) {
@@ -152,7 +189,6 @@ void renderGraph(
       sf::Time elapasedTime = animationClock.getElapsedTime();
       float t = elapasedTime.asSeconds() / animationDuration.asSeconds();
 
-
       auto u = path[currentSegment];
       auto w = path[currentSegment + 1];
 
@@ -163,8 +199,9 @@ void renderGraph(
           static_cast<float>(positions.at(w).first - centerX + windowCenterX),
           static_cast<float>(positions.at(w).second - centerY + windowCenterY));
 
+
       if (p.getVertexCount() == currentSegment + 1) {
-        p.append(sf::Vertex{start, sf::Color::Cyan});
+        p.append(sf::Vertex{start, sf::Color::Red});
       }
 
       sf::Vector2f currentPos;
