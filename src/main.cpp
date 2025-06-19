@@ -13,12 +13,13 @@ using namespace graphlib;
 
 using namespace std;
 
-std::string tiny = "/Users/simelabs/Documents/learn/alogoritm-cpp/resources/tinyEWG.txt";
+std::string tiny =
+    "/Users/simelabs/Documents/learn/alogoritm-cpp/resources/tinyEWG.txt";
 std::string medium = "/Users/simelabs/Downloads/mediumEWG.txt";
 
 void renderGraph(
     const PGraph<std::string> &graph,
-    const std::unordered_map<int, std::pair<double, double>> &positions,
+    const std::unordered_map<int, std::pair<float, float>> &positions,
     const std::vector<int> &path);
 float lerp(float a, float b, float t) { return a + t * (b - a); };
 int main() {
@@ -100,30 +101,30 @@ int main() {
 
 void renderGraph(
     const PGraph<std::string> &graph,
-    const std::unordered_map<int, std::pair<double, double>> &positions,
+    const std::unordered_map<int, std::pair<float, float>> &positions,
     const std::vector<int> &path) {
   sf::RenderWindow window(sf::VideoMode({800, 800}, 24), "Graph Visualizer");
 
   // --- Center the graph in the window ---
-  double minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
+  float minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
   for (const auto &[id, pos] : positions) {
     minX = std::min(minX, pos.first);
     maxX = std::max(maxX, pos.first);
     minY = std::min(minY, pos.second);
     maxY = std::max(maxY, pos.second);
   }
-  double centerX = (minX + maxX) / 2.0;
-  double centerY = (minY + maxY) / 2.0;
-  double windowCenterX = 400; // half of 800
-  double windowCenterY = 400; // half of 600
+  float centerX = (minX + maxX) / 2.0;
+  float centerY = (minY + maxY) / 2.0;
+  float windowCenterX = 400; // half of 800
+  float windowCenterY = 400; // half of 600
 
   sf::Clock animationClock;
   const sf::Time animationDuration = sf::seconds(3.0f);
   size_t currentSegment = 0;
   sf::VertexArray p(sf::PrimitiveType::LineStrip);
-  p.append(sf::Vertex{sf::Vector2f(
-      static_cast<float>(positions.at(0).first - centerX + windowCenterX),
-      static_cast<float>(positions.at(0).second - centerY + windowCenterY))});
+  p.append(sf::Vertex{
+      sf::Vector2f(positions.at(0).first - centerX + windowCenterX,
+                   positions.at(0).second - centerY + windowCenterY)});
 
   while (window.isOpen()) {
 
@@ -144,12 +145,10 @@ void renderGraph(
         auto fromPos = positions.at(u);
         auto toPos = positions.at(v);
         std::array<sf::Vertex, 2> line = {
-            sf::Vertex{sf::Vector2f(
-                static_cast<float>(fromPos.first - centerX + windowCenterX),
-                static_cast<float>(fromPos.second - centerY + windowCenterY))},
-            sf::Vertex{sf::Vector2f(
-                static_cast<float>(toPos.first - centerX + windowCenterX),
-                static_cast<float>(toPos.second - centerY + windowCenterY))}};
+            sf::Vertex{sf::Vector2f(fromPos.first - centerX + windowCenterX,
+                                    fromPos.second - centerY + windowCenterY)},
+            sf::Vertex{sf::Vector2f(toPos.first - centerX + windowCenterX,
+                                    toPos.second - centerY + windowCenterY)}};
         window.draw(line.data(), line.size(), sf::PrimitiveType::Lines);
       }
     }
@@ -163,9 +162,8 @@ void renderGraph(
     // Draw nodes
     for (const auto &[id, pos] : positions) {
       sf::CircleShape circle(10);
-      circle.setPosition(
-          {static_cast<float>(pos.first - centerX + windowCenterX - 10),
-           static_cast<float>(pos.second - centerY + windowCenterY - 10)});
+      circle.setPosition({pos.first - centerX + windowCenterX - 10,
+                          pos.second - centerY + windowCenterY - 10});
       circle.setFillColor(sf::Color::Blue);
       window.draw(circle);
 
@@ -178,9 +176,9 @@ void renderGraph(
       sf::FloatRect textRect = text.getLocalBounds();
       text.setOrigin(textRect.getCenter());
       text.setPosition({
-          static_cast<float>(pos.first - centerX + windowCenterX),
-          static_cast<float>(pos.second - centerY + windowCenterY -
-                             2) // -2 for better vertical centering
+          pos.first - centerX + windowCenterX,
+          pos.second - centerY + windowCenterY - 2
+          // -2 for better vertical centering
       });
       window.draw(text);
     }
@@ -192,13 +190,12 @@ void renderGraph(
       auto u = path[currentSegment];
       auto w = path[currentSegment + 1];
 
-      sf::Vector2f start = sf::Vector2f(
-          static_cast<float>(positions.at(u).first - centerX + windowCenterX),
-          static_cast<float>(positions.at(u).second - centerY + windowCenterY));
-      sf::Vector2f end = sf::Vector2f(
-          static_cast<float>(positions.at(w).first - centerX + windowCenterX),
-          static_cast<float>(positions.at(w).second - centerY + windowCenterY));
-
+      sf::Vector2f start =
+          sf::Vector2f(positions.at(u).first - centerX + windowCenterX,
+                       positions.at(u).second - centerY + windowCenterY);
+      sf::Vector2f end =
+          sf::Vector2f(positions.at(w).first - centerX + windowCenterX,
+                       positions.at(w).second - centerY + windowCenterY);
 
       if (p.getVertexCount() == currentSegment + 1) {
         p.append(sf::Vertex{start, sf::Color::Red});
