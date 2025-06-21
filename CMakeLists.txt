@@ -18,6 +18,8 @@ add_library(graph_lib
     include/dfs_graph.h
     include/bfs_graph.h
     include/Path.h
+    include/CC.h
+    include/VGraph.h
 )
 
 # Make the include directory available

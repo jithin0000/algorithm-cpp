@@ -68,7 +68,6 @@ public:
     marked[start] = true;
     while (!q.empty()) {
       NodeID u = q.front();
-      std::cout << u << std::endl;
       q.pop();
       for (auto w : G.adj()[u]) {
         if (!marked[w]) {

@@ -52,10 +52,8 @@ TEST_CASE("DFS PATH","[Dfs]")
 
     Path::DfsPath dp(G,0);
     auto path = dp.pathTo(2);
-    std::cout << path.size() << std::endl;
     while(!path.empty())
     {
-        std::cout << path.top() << std::endl;
         path.pop();
     }
 

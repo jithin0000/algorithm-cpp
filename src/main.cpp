@@ -1,3 +1,4 @@
+#include "CC.h"
 #include "GraphVisualizer.h"
 #include "PGraph.h"
 #include "Path.h"
@@ -9,12 +10,13 @@
 #include <sstream>
 #include <stack>
 #include <unordered_map>
+#include "VGraph.h"
 using namespace graphlib;
 
 using namespace std;
 
 std::string tiny =
-    "/Users/simelabs/Documents/learn/alogoritm-cpp/resources/tinyEWG.txt";
+    "/Users/simelabs/Documents/learn/alogoritm-cpp/resources/tinyG.txt";
 std::string medium = "/Users/simelabs/Downloads/mediumEWG.txt";
 
 void renderGraph(
@@ -24,77 +26,57 @@ void renderGraph(
 float lerp(float a, float b, float t) { return a + t * (b - a); };
 int main() {
 
-  // PGraph<std::string> graph(5); // 5 nodes (IDs: 0 to 4)
-  // graph.add_edge(0, 1);
-  // graph.add_edge(1, 2);
-  // graph.add_edge(2, 3);
-  // graph.add_edge(3, 4);
-  // graph.add_edge(4, 0);
-  // graph.add_edge(1, 3);
-
-  // Compute layout
-  // ForceDirectedLayout layout(graph);
-  // layout.simulate(100);
-  //  Get positions for visualization
-  // auto positions = layout.getPositions();
-  // for (const auto &[nodeId, pos] : positions) {
-  // std::cout << "Node " << nodeId << ": (" << pos.first << ", " << pos.second
-  //          << ")\n";
+  // std::ifstream input(tiny);
+  // if (!input.is_open()) {
+  //   std::cerr << "Failed to open file" << std::endl;
+  //   return 1;
   // }
-  ///
-  ///
 
-  std::ifstream input(tiny);
-  if (!input.is_open()) {
-    std::cerr << "Failed to open file" << std::endl;
-    return 1;
-  }
+  // int number_of_vertices;
+  // std::string line;
+  // std::vector<std::pair<int, int>> edges;
+  // if (std::getline(input, line)) {
+  // std:
+  //   istringstream iss(line);
+  //   if (!(iss >> number_of_vertices)) {
+  //     return 1;
+  //   }
+  // }
+  // std::getline(input, line);
+  // while (std::getline(input, line)) {
+  //   std::istringstream iss(line);
+  //   int first, second;
+  //   if (iss >> first >> second) {
+  //     edges.emplace_back(first, second);
+  //   } else {
+  //     std::cerr << "incorrect line format " << std::endl;
+  //   }
+  // }
 
-  int number_of_vertices;
-  std::string line;
-  std::vector<std::pair<int, int>> edges;
-  if (std::getline(input, line)) {
-  std:
-    istringstream iss(line);
-    if (!(iss >> number_of_vertices)) {
-      return 1;
-    }
-  }
-  std::getline(input, line);
-  while (std::getline(input, line)) {
-    std::istringstream iss(line);
-    int first, second;
-    float third;
-    if (iss >> first >> second >> third) {
-      edges.emplace_back(first, second);
-    } else {
-      std::cerr << "incorrect line format " << std::endl;
-    }
-  }
+  // input.close();
 
-  input.close();
-
-  PGraph<std::string> graph(number_of_vertices);
+  PGraph<std::string> graph(13);
   std::string value = "Node ";
-  for (int i = 0; i < number_of_vertices; i++) {
+  for (int i = 0; i < 13; i++) {
     value += std::to_string(i);
     graph.add_node(value);
+        value ="Node ";
   }
+    graph.add_edge(0,1);
+    graph.add_edge(0,2);
 
-  for (const auto &edge : edges) {
-    graph.add_edge(edge.first, edge.second);
-  }
 
   ForceDirectedLayout layout(graph);
   layout.simulate(100);
   auto positions = layout.getPositions();
-  Path::BfsPath dfs(graph, 0);
-  auto path = dfs.pathTo(2);
+  Path::DfsPath dfs(graph, 0);
+  auto path = dfs.pathTo(3);
   std::vector<int> pathv;
   while (!path.empty()) {
     pathv.push_back(path.top());
     path.pop();
   }
+
 
   renderGraph(graph, positions, pathv);
 };
@@ -113,10 +95,12 @@ void renderGraph(
     minY = std::min(minY, pos.second);
     maxY = std::max(maxY, pos.second);
   }
+
   float centerX = (minX + maxX) / 2.0;
   float centerY = (minY + maxY) / 2.0;
   float windowCenterX = 400; // half of 800
   float windowCenterY = 400; // half of 600
+    Vis::GraphViz gvz(graph,800,800);
 
   sf::Clock animationClock;
   const sf::Time animationDuration = sf::seconds(3.0f);
@@ -125,6 +109,7 @@ void renderGraph(
   p.append(sf::Vertex{
       sf::Vector2f(positions.at(0).first - centerX + windowCenterX,
                    positions.at(0).second - centerY + windowCenterY)});
+
 
   while (window.isOpen()) {
 
@@ -140,50 +125,16 @@ void renderGraph(
 
     window.clear(sf::Color(128, 128, 128));
     // Draw edges
-    for (int u = 0; u < graph.get_node_count(); u++) {
-      for (int v : graph.adj()[u]) {
-        auto fromPos = positions.at(u);
-        auto toPos = positions.at(v);
-        std::array<sf::Vertex, 2> line = {
-            sf::Vertex{sf::Vector2f(fromPos.first - centerX + windowCenterX,
-                                    fromPos.second - centerY + windowCenterY)},
-            sf::Vertex{sf::Vector2f(toPos.first - centerX + windowCenterX,
-                                    toPos.second - centerY + windowCenterY)}};
-        window.draw(line.data(), line.size(), sf::PrimitiveType::Lines);
-      }
-    }
-    sf::Font font;
 
+    sf::Font font;
     if (!font.openFromFile("/Users/Simelabs/Downloads/arial.ttf")) {
-      // Handle error: font file not found
-      // You can download a .ttf font and place it in your project directory
+            std::runtime_error("Font not loaded");
     }
 
     // Draw nodes
-    for (const auto &[id, pos] : positions) {
-      sf::CircleShape circle(10);
-      circle.setPosition({pos.first - centerX + windowCenterX - 10,
-                          pos.second - centerY + windowCenterY - 10});
-      circle.setFillColor(sf::Color::Blue);
-      window.draw(circle);
+    gvz.drawGraph(window,font);
 
-      // Draw node ID at the center
-      sf::Text text(font);
-      text.setString(std::to_string(id));
-      text.setCharacterSize(14);
-      text.setFillColor(sf::Color::White);
-      // Center the text in the circle
-      sf::FloatRect textRect = text.getLocalBounds();
-      text.setOrigin(textRect.getCenter());
-      text.setPosition({
-          pos.first - centerX + windowCenterX,
-          pos.second - centerY + windowCenterY - 2
-          // -2 for better vertical centering
-      });
-      window.draw(text);
-    }
-
-    if (currentSegment < path.size() - 1) {
+    if (path.size() > 0 && currentSegment < path.size() - 1) {
       sf::Time elapasedTime = animationClock.getElapsedTime();
       float t = elapasedTime.asSeconds() / animationDuration.asSeconds();
 
@@ -199,6 +150,7 @@ void renderGraph(
 
       if (p.getVertexCount() == currentSegment + 1) {
         p.append(sf::Vertex{start, sf::Color::Red});
+        p.append(sf::Vertex{end, sf::Color::Red});
       }
 
       sf::Vector2f currentPos;

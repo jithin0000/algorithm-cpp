@@ -5,6 +5,7 @@
 #include <string>
 #include <utility>
 #include <type_traits>
+#include "CC.h"
 using namespace graphlib;
 typedef PGraph<int, EmptyEdgeData, true> DirectedGraph;
 typedef PGraph<int> SG;
@@ -170,15 +171,26 @@ TEST_CASE("EdgeCases", "[PGraph]")
     REQUIRE(++G.begin()==G.end());
 }
 TEST_CASE("NodeProxy", "[PGraph]"){
-    SG G(2);
+    SG G(3);
     G.add_node(42);
     G.add_node(23);
+    G.add_node(45);
     G.add_edge(0,1);
 
     auto node = *G.begin();
     REQUIRE(node.id()==0);
     REQUIRE(node.degree()==1);
     REQUIRE(node.data()==42);
+
+    CC c(G);
+    REQUIRE(c.connected(0,1)==true);
+    REQUIRE(c.connected(0,2)==false);
+    REQUIRE(c.count()==2);
+
+    for(int i=0; i < c.data().size() ; i++)
+    {
+        auto nd = G.get_node_data(i);
+    }
 }
 
 
