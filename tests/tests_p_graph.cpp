@@ -1,17 +1,16 @@
-#include "PGraph.h"
+#include "Graph.h"
 #include <catch2/catch_test_macros.hpp>
 #include<iostream>
 #include <initializer_list>
 #include <string>
 #include <utility>
 #include <type_traits>
-#include "CC.h"
 using namespace graphlib;
-typedef PGraph<int, EmptyEdgeData, true> DirectedGraph;
-typedef PGraph<int> SG;
+typedef Graph<int, EmptyEdgeData, true> DirectedGraph;
+typedef Graph<int> SG;
 
-TEST_CASE("PGraph Add Node", "[PGraph]") {
-  PGraph<int> G;
+TEST_CASE("Graph Add Node", "[Graph]") {
+  Graph<int> G;
     for(int i=0; i < 10 ; i++)
     {
         G.add_node(i);
@@ -27,9 +26,9 @@ TEST_CASE("PGraph Add Node", "[PGraph]") {
 
 }
 
-TEST_CASE("PGraph Add Edge", "[PGraph]") {
+TEST_CASE("Graph Add Edge", "[Graph]") {
 
-  PGraph<int> G;
+  Graph<int> G;
   for (int i = 0; i < 5; i++)
     G.add_node(i);
   G.add_edge(0, 1);
@@ -43,9 +42,9 @@ TEST_CASE("PGraph Add Edge", "[PGraph]") {
   REQUIRE_THROWS(G.add_edge(0, 10));
 }
 
-TEST_CASE("Test Degree", "[PGraph]") {
+TEST_CASE("Test Degree", "[Graph]") {
 
-  PGraph<std::string> G;
+  Graph<std::string> G;
   G.add_node("hi");
   G.add_node("hello");
   G.add_node("how");
@@ -60,7 +59,7 @@ TEST_CASE("Test Degree", "[PGraph]") {
   REQUIRE_THROWS(G.degree(10));
 }
 
-TEST_CASE("IN_DEGREE AND OUT_DEGREE", "[PGraph]") {
+TEST_CASE("IN_DEGREE AND OUT_DEGREE", "[Graph]") {
   DirectedGraph G;
   for (int i = 0; i < 5; i++) {
     G.add_node(i);
@@ -82,8 +81,8 @@ TEST_CASE("IN_DEGREE AND OUT_DEGREE", "[PGraph]") {
   REQUIRE(G.in_degree(4) == 0);
 }
 
-TEST_CASE("Constructor Initialization", "[PGraph]") {
-  PGraph<int> G(10);
+TEST_CASE("Constructor Initialization", "[Graph]") {
+  Graph<int> G(10);
 for (int i = 0; i < 10; i++) {
     G.add_node(i);
   }
@@ -92,7 +91,7 @@ for (int i = 0; i < 10; i++) {
   REQUIRE(G.adj().size() == 10);
 }
 
-TEST_CASE("Constructor Initializer List", "[PGraph]") {
+TEST_CASE("Constructor Initializer List", "[Graph]") {
   SG G{4,
        {
            {0, 1},
@@ -107,7 +106,7 @@ TEST_CASE("Constructor Initializer List", "[PGraph]") {
   REQUIRE(G.degree(2) == 1);
 }
 
-TEST_CASE("Basic Iterator","[PGraph]")
+TEST_CASE("Basic Iterator","[Graph]")
 {
     SG G(3);
     for (int i = 0; i < 3; i++) {
@@ -125,9 +124,9 @@ TEST_CASE("Basic Iterator","[PGraph]")
     REQUIRE(it==G.end());
 }
 
-TEST_CASE("Range Based","[PGraph]")
+TEST_CASE("Range Based","[Graph]")
 {
-    PGraph<std::string, graphlib::EmptyEdgeData, false> G(3);
+    Graph<std::string, graphlib::EmptyEdgeData, false> G(3);
     G.add_node("A");
     G.add_node("B");
     G.add_node("C");
@@ -139,7 +138,7 @@ TEST_CASE("Range Based","[PGraph]")
     REQUIRE(collected== out);
 }
 
-TEST_CASE("RandomIterator","[PGraph]")
+TEST_CASE("RandomIterator","[Graph]")
 {
     SG g(5);
     for(int i=0 ; i<5 ; i++)
@@ -151,7 +150,7 @@ TEST_CASE("RandomIterator","[PGraph]")
     REQUIRE((g.end()-g.begin())==5);
 
 }
-TEST_CASE("ConstIterator","[PGraph]")
+TEST_CASE("ConstIterator","[Graph]")
 {
     SG g(3);
     g.add_node(1);
@@ -161,7 +160,7 @@ TEST_CASE("ConstIterator","[PGraph]")
     REQUIRE(it->id()==0);
 
 }
-TEST_CASE("EdgeCases", "[PGraph]")
+TEST_CASE("EdgeCases", "[Graph]")
 {
     SG G(1);
     REQUIRE(G.begin()==G.end());
@@ -169,28 +168,6 @@ TEST_CASE("EdgeCases", "[PGraph]")
     G.add_node(10);
     REQUIRE_FALSE(G.begin()==G.end());
     REQUIRE(++G.begin()==G.end());
-}
-TEST_CASE("NodeProxy", "[PGraph]"){
-    SG G(3);
-    G.add_node(42);
-    G.add_node(23);
-    G.add_node(45);
-    G.add_edge(0,1);
-
-    auto node = *G.begin();
-    REQUIRE(node.id()==0);
-    REQUIRE(node.degree()==1);
-    REQUIRE(node.data()==42);
-
-    CC c(G);
-    REQUIRE(c.connected(0,1)==true);
-    REQUIRE(c.connected(0,2)==false);
-    REQUIRE(c.count()==2);
-
-    for(int i=0; i < c.data().size() ; i++)
-    {
-        auto nd = G.get_node_data(i);
-    }
 }
 
 

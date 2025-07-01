@@ -1,5 +1,5 @@
 #pragma once
-#include "PGraph.h"
+#include "Graph.h"
 #include <cmath>
 #include <random>
 #include <unordered_map>

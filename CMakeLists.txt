@@ -7,18 +7,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Create a library target
 add_library(graph_lib
     src/graph.cpp
-    include/graph.h
-    include/directed_graph.h
-    include/dfs_graph_processing.h
-    include/directed_cycle.h
-    include/topological_sort.h
-    include/symbol_graph.h
-    include/PGraph.h
+    include/Graph.h
     include/GraphVisualizer.h
-    include/dfs_graph.h
-    include/bfs_graph.h
-    include/Path.h
-    include/CC.h
     include/VGraph.h
 )
 
@@ -51,13 +41,7 @@ if(BUILD_TESTS)
     FetchContent_MakeAvailable(Catch2)
 
     add_executable(graph_tests 
-    tests/test_graph.cpp 
-    tests/test_directed_graph.cpp 
-    tests/test_cycle.cpp 
-    tests/tests_topological_sort.cpp
-    tests/tests_symbol_graph.cpp
     tests/tests_p_graph.cpp
-    tests/tests_dfs.cpp
     )
     target_link_libraries(graph_tests PRIVATE graph_lib Catch2::Catch2WithMain)
 endif()
